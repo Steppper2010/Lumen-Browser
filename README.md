@@ -36,7 +36,7 @@ Download the latest release from the **Releases** section.
 Or clone the repository:
 
 ```bash
-git clone https://github.com/your-username/Lumen.git
+git clone https://github.com/Steppper2010/Lumen-Browser
 cd Lumen
 ```
 
@@ -98,12 +98,19 @@ Contributions, issues, and feature requests are welcome.
 Feel free to fork the project and submit a Pull Request.
 
 ---
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
 ---
+
+## 📬 Contact
+
+Have questions, suggestions, or found a bug? Feel free to reach out!
+
+* 💬 **Discord:** `Steppper_`
+* ✈️ **Telegram:** https://t.me/steppper
+* 🐛 **GitHub Issues:** Open an issue in this repository
+
+I'm always open to feedback, feature requests, and collaboration.
+
+
 
 ## ⭐ Support
 
