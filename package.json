@@ -62,8 +62,8 @@
     }
   },
   "devDependencies": {
-    "electron": "^37.2.0",
+    "electron": "^43.1.1",
     "electron-builder": "^26.15.3",
-    "png-to-ico": "^3.0.1"
+    "png-to-ico": "^3.0.2"
   }
 }
