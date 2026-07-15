@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumen Browser</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="browser-topbar">
+        <div class="window-brand" aria-label="Lumen Browser">
+          <img src="./assets/lumen-logo-metal-aperture.png" alt="" />
+          <span>Lumen</span>
+        </div>
+        <section class="tabs-zone" aria-label="Tabs">
+          <div class="tab-strip" id="tabStrip"></div>
+          <button class="icon-button" id="newTabButton" type="button" aria-label="New tab">+</button>
+        </section>
+        <div class="window-controls" aria-label="Window controls">
+          <button class="window-control" id="windowMinimizeButton" type="button" aria-label="Minimize">—</button>
+          <button class="window-control" id="windowMaximizeButton" type="button" aria-label="Maximize">□</button>
+          <button class="window-control is-close" id="windowCloseButton" type="button" aria-label="Close">×</button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="browser-column">
+          <form class="nav-bar" id="navForm">
+            <button class="icon-button" id="backButton" type="button" aria-label="Back">&lt;</button>
+            <button class="icon-button" id="forwardButton" type="button" aria-label="Forward">&gt;</button>
+            <button class="icon-button" id="reloadButton" type="button" aria-label="Reload">↻</button>
+            <button class="icon-button" id="homeButton" type="button" aria-label="Home">⌂</button>
+            <div class="omnibox-wrap">
+              <span class="security-dot" id="securityDot"></span>
+              <input
+                id="omnibox"
+                class="omnibox"
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="Address or search"
+                placeholder="Search or enter address"
+              />
+            </div>
+            <button class="icon-button" id="translateButton" type="button" aria-label="Translate page">T</button>
+            <button class="icon-button" id="bookmarkButton" type="button" aria-label="Bookmark page">*</button>
+            <button class="status-pill" id="adblockButton" type="button" aria-label="Ad blocker">
+              <span id="adblockState">AD</span>
+              <strong id="blockedCount">0</strong>
+            </button>
+            <button class="icon-button settings-icon-button" id="settingsButton" type="button" aria-label="Settings">⚙</button>
+            <button class="icon-button" id="sidebarButton" type="button" aria-label="Sidebar">▦</button>
+            <button class="menu-button" id="menuButton" type="button" aria-label="Browser menu">MENU</button>
+          </form>
+
+          <nav class="bookmark-bar" id="bookmarkBar" aria-label="Bookmarks"></nav>
+
+          <section class="webview-stage" id="webviewStage" aria-label="Browser view"></section>
+        </section>
+
+        <aside class="side-panel" id="sidePanel" aria-label="Browser sidebar" hidden>
+          <div class="side-header">
+            <div>
+              <span class="eyebrow">Workspace</span>
+              <h2 id="sideTitle">Tabs</h2>
+            </div>
+            <button class="icon-button" id="closeSidebarButton" type="button" aria-label="Close sidebar">x</button>
+          </div>
+
+          <nav class="side-tabs" aria-label="Sidebar views">
+            <button class="is-active" type="button" data-side-view="tabs">Tabs</button>
+            <button type="button" data-side-view="history">History</button>
+            <button type="button" data-side-view="downloads">Downloads</button>
+            <button type="button" data-side-view="screenshots">Shots</button>
+            <button type="button" data-side-view="notes">Notes</button>
+            <button type="button" data-side-view="passwords">Passwords</button>
+            <button type="button" data-side-view="profiles">Profiles</button>
+          </nav>
+
+          <section class="side-view is-active" data-side-panel="tabs">
+            <input id="tabSearchInput" class="side-search" type="search" placeholder="Search open tabs" />
+            <div class="quick-actions">
+              <button class="secondary-button" id="restoreClosedTabButton" type="button">Restore closed</button>
+              <button class="secondary-button" id="closeDuplicateTabsButton" type="button">Close duplicates</button>
+            </div>
+            <div class="side-list" id="tabManagerList"></div>
+          </section>
+
+          <section class="side-view" data-side-panel="history">
+            <input id="historySearchInput" class="side-search" type="search" placeholder="Search history" />
+            <div class="quick-actions">
+              <button class="secondary-button danger-button" id="clearHistoryButton" type="button">Clear history</button>
+            </div>
+            <div class="side-list" id="historyList"></div>
+          </section>
+
+          <section class="side-view" data-side-panel="downloads">
+            <div class="side-list" id="downloadList"></div>
+          </section>
+
+          <section class="side-view" data-side-panel="screenshots">
+            <div class="quick-actions">
+              <button class="secondary-button" id="openScreenshotsFolderButton" type="button">Open folder</button>
+              <button class="secondary-button danger-button" id="clearScreenshotsButton" type="button">Clear list</button>
+            </div>
+            <div class="side-list screenshot-list" id="screenshotList"></div>
+          </section>
+
+          <section class="side-view" data-side-panel="notes">
+            <div class="note-meta" id="noteMeta">No page selected</div>
+            <textarea id="pageNoteInput" class="note-input" placeholder="Write a note for this page"></textarea>
+            <button class="secondary-button" id="saveNoteButton" type="button">Save note</button>
+          </section>
+
+          <section class="side-view" data-side-panel="passwords">
+            <input id="passwordSearchInput" class="side-search" type="search" placeholder="Search passwords" />
+            <form class="password-form" id="passwordForm" autocomplete="off">
+              <input id="passwordTitleInput" type="text" placeholder="Title" autocomplete="off" />
+              <input id="passwordUrlInput" type="url" placeholder="https://example.com" autocomplete="off" />
+              <input id="passwordUsernameInput" type="text" placeholder="Username / email" autocomplete="off" />
+              <div class="password-secret-row">
+                <input id="passwordValueInput" type="password" placeholder="Password" autocomplete="new-password" />
+                <button class="secondary-button" id="passwordGenerateButton" type="button">Generate</button>
+              </div>
+              <div class="quick-actions password-actions">
+                <button class="secondary-button" id="passwordUseCurrentButton" type="button">Current page</button>
+                <button class="secondary-button" id="passwordFillButton" type="button">Fill page</button>
+                <button class="secondary-button" id="passwordSaveButton" type="submit">Save</button>
+              </div>
+              <small class="side-status" id="passwordStatus">Passwords are encrypted locally.</small>
+            </form>
+            <div class="side-list password-list" id="passwordList"></div>
+          </section>
+
+          <section class="side-view" data-side-panel="profiles">
+            <div class="profile-strip" id="profileList"></div>
+            <form class="profile-form" id="profileForm">
+              <input id="profileNameInput" type="text" placeholder="New profile name" />
+              <button class="secondary-button" type="submit">Add profile</button>
+            </form>
+            <button class="secondary-button" id="privateWindowButton" type="button">New private window</button>
+          </section>
+        </aside>
+
+        <div class="app-menu" id="appMenu" hidden>
+          <div class="menu-section">
+            <button type="button" data-command="new-tab">New tab</button>
+            <button type="button" data-command="new-window">New window</button>
+            <button type="button" data-command="new-private-window">Private window</button>
+            <button type="button" data-command="close-tab">Close tab</button>
+            <button type="button" data-command="restore-closed-tab">Restore closed tab</button>
+          </div>
+          <div class="menu-section">
+            <button type="button" data-command="back">Back</button>
+            <button type="button" data-command="forward">Forward</button>
+            <button type="button" data-command="reload">Reload</button>
+            <button type="button" data-command="home">Home</button>
+          </div>
+          <div class="menu-section">
+            <button type="button" data-command="cut">Cut</button>
+            <button type="button" data-command="copy">Copy</button>
+            <button type="button" data-command="paste">Paste</button>
+            <button type="button" data-command="select-all">Select all</button>
+          </div>
+          <div class="menu-section">
+            <button type="button" data-command="toggle-bookmark">Bookmark page</button>
+            <button type="button" data-command="toggle-bookmarks-panel">Bookmarks</button>
+            <button type="button" data-command="toggle-bookmarks-bar">Bookmarks bar</button>
+            <button type="button" data-command="password-manager">Passwords</button>
+            <button type="button" data-command="split-view">Split view</button>
+            <button type="button" data-command="translate-page">Translate page</button>
+            <button type="button" data-command="toggle-sidebar">Sidebar</button>
+            <button type="button" data-command="reader-mode">Reader mode</button>
+          </div>
+          <div class="menu-section">
+            <button type="button" data-command="toggle-adblock">Ad blocker</button>
+            <button type="button" data-command="reset-adblock">Reset counter</button>
+            <button type="button" data-command="settings">Settings</button>
+          </div>
+          <div class="menu-section">
+            <button type="button" data-command="view-source">Page source</button>
+            <button type="button" data-command="devtools">DevTools</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="password-save-prompt" id="passwordSavePrompt" hidden>
+      <div>
+        <strong id="passwordPromptTitle">Save password?</strong>
+        <span id="passwordPromptDetail">Lumen can save this login locally.</span>
+      </div>
+      <button class="secondary-button" id="passwordPromptSaveButton" type="button">Save</button>
+      <button class="secondary-button" id="passwordPromptEditButton" type="button">Edit</button>
+      <button class="secondary-button" id="passwordPromptDismissButton" type="button">Not now</button>
+    </div>
+
+    <dialog class="settings-dialog" id="settingsDialog">
+      <form class="settings-card" id="settingsForm" method="dialog">
+        <div class="dialog-header settings-header">
+          <div>
+            <span class="eyebrow">Control</span>
+            <h2>Settings</h2>
+          </div>
+          <button class="icon-button" id="closeSettingsButton" type="button" aria-label="Close settings">x</button>
+        </div>
+
+        <div class="settings-toolbar">
+          <input id="settingsSearchInput" type="search" placeholder="Search settings" autocomplete="off" />
+          <div class="settings-summary">
+            <span id="settingsBookmarkCount">0 bookmarks</span>
+            <span id="settingsBlockedCount">0 blocked</span>
+          </div>
+        </div>
+
+        <div class="settings-layout">
+          <nav class="settings-nav" aria-label="Settings sections">
+            <button type="button" class="is-active" data-settings-section="general">General</button>
+            <button type="button" data-settings-section="appearance">Appearance</button>
+            <button type="button" data-settings-section="tabs">Tabs</button>
+            <button type="button" data-settings-section="privacy">Privacy</button>
+            <button type="button" data-settings-section="vpn">VPN</button>
+            <button type="button" data-settings-section="capture">Capture</button>
+            <button type="button" data-settings-section="developer">Developer</button>
+            <button type="button" data-settings-section="library">Library</button>
+            <button type="button" data-settings-section="about">About</button>
+          </nav>
+
+          <div class="settings-panels">
+            <section
+              class="settings-panel is-active"
+              data-settings-panel="general"
+              data-settings-search="general default search engine new tab window"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">General</span>
+                <h3>Navigation</h3>
+              </div>
+
+              <label class="setting-row" data-settings-search="default search engine duckduckgo google bing brave yandex">
+                <span>
+                  <strong>Default search engine</strong>
+                  <small>Used by the address bar and new-tab search.</small>
+                </span>
+                <select id="settingsSearchEngine">
+                  <option value="duckduckgo">DuckDuckGo</option>
+                  <option value="google">Google</option>
+                  <option value="bing">Bing</option>
+                  <option value="brave">Brave Search</option>
+                  <option value="yandex">Yandex</option>
+                </select>
+              </label>
+
+              <label class="setting-row" data-settings-search="language interface russian english locale">
+                <span>
+                  <strong>Browser language</strong>
+                  <small>Switch the Lumen interface language immediately.</small>
+                </span>
+                <select id="settingsLanguage">
+                  <option value="ru">Русский</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+
+              <label class="setting-row" data-settings-search="translate translation language target page">
+                <span>
+                  <strong>Translate target</strong>
+                  <small>Used by the translate button in the address bar.</small>
+                </span>
+                <select id="settingsTranslationTarget">
+                  <option value="ru">Русский</option>
+                  <option value="en">English</option>
+                  <option value="de">Deutsch</option>
+                  <option value="fr">Français</option>
+                  <option value="es">Español</option>
+                  <option value="it">Italiano</option>
+                  <option value="pt">Português</option>
+                  <option value="tr">Türkçe</option>
+                  <option value="zh-cn">中文</option>
+                  <option value="ja">日本語</option>
+                  <option value="ko">한국어</option>
+                </select>
+              </label>
+
+              <label class="setting-row" data-settings-search="profile active personal work">
+                <span>
+                  <strong>Active profile</strong>
+                  <small>Groups history, notes, and restored tabs.</small>
+                </span>
+                <select id="settingsActiveProfile"></select>
+              </label>
+
+              <label class="setting-row" data-settings-search="home page homepage start page new tab">
+                <span>
+                  <strong>Home page</strong>
+                  <small>Leave empty to use the Lumen new-tab page.</small>
+                </span>
+                <input id="settingsHomePageUrl" type="url" placeholder="https://example.com" />
+              </label>
+
+              <div class="quick-actions" data-settings-search="new window new tab">
+                <button class="secondary-button" id="settingsNewWindowButton" type="button">New window</button>
+                <button class="secondary-button" id="settingsPrivateWindowButton" type="button">Private window</button>
+                <button class="secondary-button" type="button" data-command="new-tab">New tab</button>
+                <button class="secondary-button" id="settingsResetPreferencesButton" type="button">Reset preferences</button>
+              </div>
+            </section>
+
+            <section
+              class="settings-panel"
+              data-settings-panel="appearance"
+              data-settings-search="appearance theme start page backdrop compact tabs bookmarks bar motion animation security indicator"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">Appearance</span>
+                <h3>Interface</h3>
+              </div>
+
+              <label class="setting-row" data-settings-search="theme browser color palette pure black graphite terminal paper midnight matrix frost solar violet ember">
+                <span>
+                  <strong>Theme</strong>
+                  <small>Choose one of 10 tuned interface palettes.</small>
+                </span>
+                <select id="settingsTheme">
+                  <option value="pure-black">Pure Black</option>
+                  <option value="graphite">Graphite</option>
+                  <option value="terminal">Terminal Green</option>
+                  <option value="paper-white">Paper White</option>
+                  <option value="midnight">Midnight Blue</option>
+                  <option value="cyber-matrix">Cyber Matrix</option>
+                  <option value="frost">Frost Glass</option>
+                  <option value="solar">Solar Mono</option>
+                  <option value="violet-noir">Violet Noir</option>
+                  <option value="ember">Ember Mono</option>
+                </select>
+              </label>
+
+              <label class="setting-row" data-settings-search="start page backdrop wallpaper animation home new tab signal orbit rain waveform starfield radar quiet">
+                <span>
+                  <strong>Start page backdrop</strong>
+                  <small>Choose the animated wallpaper for the home and new-tab page.</small>
+                </span>
+                <select id="settingsStartPageBackdrop">
+                  <option value="signal-grid">Signal Grid</option>
+                  <option value="orbital">Orbital Rings</option>
+                  <option value="digital-rain">Digital Rain</option>
+                  <option value="waveform">Waveform</option>
+                  <option value="starfield">Starfield</option>
+                  <option value="radar">Radar Sweep</option>
+                  <option value="quiet">Quiet Minimal</option>
+                </select>
+              </label>
+
+              <label class="setting-row" data-settings-search="bookmarks bar show hide">
+                <span>
+                  <strong>Bookmarks bar</strong>
+                  <small>Keep saved pages one click away under the address bar.</small>
+                </span>
+                <input id="settingsBookmarkBarToggle" type="checkbox" />
+              </label>
+
+              <label class="setting-row" data-settings-search="compact tabs smaller dense tabs">
+                <span>
+                  <strong>Compact tabs</strong>
+                  <small>Fit more open pages into the top bar.</small>
+                </span>
+                <input id="settingsCompactTabsToggle" type="checkbox" />
+              </label>
+
+              <label class="setting-row" data-settings-search="zoom page scale size text default zoom">
+                <span>
+                  <strong>Default zoom</strong>
+                  <small>Apply page scale to all open tabs and future tabs.</small>
+                </span>
+                <select id="settingsDefaultZoom">
+                  <option value="0.8">80%</option>
+                  <option value="0.9">90%</option>
+                  <option value="1">100%</option>
+                  <option value="1.1">110%</option>
+                  <option value="1.25">125%</option>
+                  <option value="1.5">150%</option>
+                </select>
+              </label>
+
+              <label class="setting-row" data-settings-search="motion animation transitions start page">
+                <span>
+                  <strong>Motion</strong>
+                  <small>Enable interface transitions and animated new-tab background.</small>
+                </span>
+                <input id="settingsMotionToggle" type="checkbox" />
+              </label>
+
+              <label class="setting-row" data-settings-search="security indicator lock secure dot">
+                <span>
+                  <strong>Security indicator</strong>
+                  <small>Show the connection marker inside the address bar.</small>
+                </span>
+                <input id="settingsSecurityToggle" type="checkbox" />
+              </label>
+            </section>
+
+            <section
+              class="settings-panel"
+              data-settings-panel="tabs"
+              data-settings-search="tabs new tabs background order behavior"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">Tabs</span>
+                <h3>Behavior</h3>
+              </div>
+
+              <label class="setting-row" data-settings-search="open tabs next to current adjacent order">
+                <span>
+                  <strong>Open tabs next to current</strong>
+                  <small>New tabs appear beside the active tab instead of at the far right.</small>
+                </span>
+                <input id="settingsOpenTabsNextToCurrentToggle" type="checkbox" />
+              </label>
+
+              <label class="setting-row" data-settings-search="background tabs links popups">
+                <span>
+                  <strong>Open requested tabs in background</strong>
+                  <small>Links that request a new tab will not steal focus.</small>
+                </span>
+                <input id="settingsOpenNewTabsInBackgroundToggle" type="checkbox" />
+              </label>
+            </section>
+
+            <section
+              class="settings-panel"
+              data-settings-panel="privacy"
+              data-settings-search="privacy cache ad blocker ads trackers blocked counter reset"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">Privacy</span>
+                <h3>Blocking</h3>
+              </div>
+
+              <label class="setting-row" data-settings-search="ad blocker ads trackers">
+                <span>
+                  <strong>Built-in ad blocker</strong>
+                  <small>Block common ad and tracker requests before pages load.</small>
+                </span>
+                <input id="settingsAdblockToggle" type="checkbox" />
+              </label>
+
+              <label class="setting-row" data-settings-search="privacy shield do not track gpc permissions geolocation notifications">
+                <span>
+                  <strong>Privacy Shield</strong>
+                  <small>Send privacy headers and block noisy permission requests like geolocation and notifications.</small>
+                </span>
+                <input id="settingsPrivacyShieldToggle" type="checkbox" />
+              </label>
+
+              <label class="setting-row" data-settings-search="fingerprint protection canvas navigator hardware privacy">
+                <span>
+                  <strong>Fingerprint protection</strong>
+                  <small>Reduce common browser fingerprint signals on loaded pages.</small>
+                </span>
+                <input id="settingsFingerprintToggle" type="checkbox" />
+              </label>
+
+              <label class="setting-row" data-settings-search="tracking params strip utm fbclid gclid clean links">
+                <span>
+                  <strong>Clean tracking links</strong>
+                  <small>Remove common tracking parameters before pages open.</small>
+                </span>
+                <input id="settingsStripTrackingToggle" type="checkbox" />
+              </label>
+
+              <div class="setting-row static-row cache-row" data-settings-search="cache clear cached files reload storage">
+                <span>
+                  <strong>Page cache</strong>
+                  <small id="settingsCacheStatus">Clear cached files without deleting cookies, history, or site logins.</small>
+                </span>
+                <button class="secondary-button" id="settingsClearCacheButton" type="button">Clear cache</button>
+              </div>
+
+              <div class="quick-actions" data-settings-search="reset blocked counter stats">
+                <button class="secondary-button" id="settingsResetAdblockButton" type="button">Reset blocked counter</button>
+                <button class="secondary-button danger-button" id="settingsClearBrowsingDataButton" type="button">
+                  Clear browsing data
+                </button>
+              </div>
+
+              <label class="setting-row textarea-row" data-settings-search="adblock allowlist whitelist domains">
+                <span>
+                  <strong>Adblock allowlist</strong>
+                  <small>One domain per line. Requests to these hosts will be allowed.</small>
+                </span>
+                <textarea id="settingsAdblockAllowlist" placeholder="example.com"></textarea>
+              </label>
+            </section>
+
+            <section
+              class="settings-panel"
+              data-settings-panel="vpn"
+              data-settings-search="vpn amnezia proxy wireguard socks http privacy tunnel"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">VPN</span>
+                <h3>Amnezia VPN</h3>
+              </div>
+
+              <div class="setting-row static-row" data-settings-search="vpn amnezia status installed app client">
+                <span>
+                  <strong>Amnezia VPN</strong>
+                  <small id="settingsVpnStatus">Checking AmneziaVPN status.</small>
+                </span>
+              </div>
+
+              <div class="quick-actions" data-settings-search="vpn amnezia open install docs documentation">
+                <button class="secondary-button" id="settingsOpenAmneziaButton" type="button">Open Amnezia</button>
+                <button class="secondary-button" id="settingsOpenAmneziaDocsButton" type="button">Docs / install</button>
+              </div>
+
+              <label class="setting-row" data-settings-search="vpn proxy browser only toggle chromium">
+                <span>
+                  <strong>Browser proxy</strong>
+                  <small>Route Lumen tabs through a local SOCKS/HTTP proxy endpoint.</small>
+                </span>
+                <input id="settingsVpnProxyToggle" type="checkbox" />
+              </label>
+
+              <div class="setting-row proxy-row" data-settings-search="vpn proxy endpoint socks http host port">
+                <span>
+                  <strong>Proxy endpoint</strong>
+                  <small>Use the endpoint exposed by your VPN/proxy client, for example 127.0.0.1:1080.</small>
+                </span>
+                <div class="proxy-grid">
+                  <select id="settingsVpnProxyScheme">
+                    <option value="socks5">SOCKS5</option>
+                    <option value="socks4">SOCKS4</option>
+                    <option value="http">HTTP</option>
+                    <option value="https">HTTPS</option>
+                  </select>
+                  <input id="settingsVpnProxyHost" type="text" placeholder="127.0.0.1" spellcheck="false" />
+                  <input id="settingsVpnProxyPort" type="number" min="1" max="65535" inputmode="numeric" placeholder="1080" />
+                </div>
+              </div>
+
+              <label class="setting-row textarea-row" data-settings-search="vpn proxy bypass local domains exceptions">
+                <span>
+                  <strong>Proxy bypass</strong>
+                  <small>Hosts that should skip the browser proxy. Keep &lt;local&gt; for local network addresses.</small>
+                </span>
+                <textarea id="settingsVpnProxyBypass" placeholder="<local>"></textarea>
+              </label>
+
+              <div class="setting-row static-row" data-settings-search="vpn proxy status active connection">
+                <span>
+                  <strong>Proxy status</strong>
+                  <small id="settingsVpnProxyStatus">Browser proxy is disabled.</small>
+                </span>
+              </div>
+            </section>
+
+            <section
+              class="settings-panel"
+              data-settings-panel="capture"
+              data-settings-search="capture screenshot screenshots png right sidebar folder"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">Capture</span>
+                <h3>Screenshots</h3>
+              </div>
+
+              <label class="setting-row" data-settings-search="open screenshots panel after capture right sidebar">
+                <span>
+                  <strong>Open screenshots panel after capture</strong>
+                  <small>Right-click screenshots appear in the right workspace drawer immediately.</small>
+                </span>
+                <input id="settingsScreenshotsPanelToggle" type="checkbox" />
+              </label>
+
+              <div class="setting-row static-row" data-settings-search="screenshots saved count folder path">
+                <span>
+                  <strong>Saved screenshots</strong>
+                  <small id="settingsScreenshotDetail">0 screenshots saved locally.</small>
+                </span>
+              </div>
+
+              <div class="setting-row static-row" data-settings-search="screenshots folder path pictures">
+                <span>
+                  <strong>Screenshot folder</strong>
+                  <small id="settingsScreenshotFolder">Pictures/Lumen Screenshots</small>
+                </span>
+              </div>
+
+              <div class="quick-actions" data-settings-search="open screenshot folder clear screenshots">
+                <button class="secondary-button" id="settingsOpenScreenshotsFolderButton" type="button">Open folder</button>
+                <button class="secondary-button danger-button" id="settingsClearScreenshotsButton" type="button">
+                  Clear list
+                </button>
+              </div>
+            </section>
+
+            <section
+              class="settings-panel"
+              data-settings-panel="developer"
+              data-settings-search="developer devtools inspect element code context menu source"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">Developer</span>
+                <h3>Tools</h3>
+              </div>
+
+              <label class="setting-row" data-settings-search="inspect element code context menu devtools">
+                <span>
+                  <strong>Developer context menu</strong>
+                  <small>Add Inspect element and DevTools to right-click menus.</small>
+                </span>
+                <input id="settingsDeveloperContextMenuToggle" type="checkbox" />
+              </label>
+
+              <div class="quick-actions" data-settings-search="devtools source inspect page code">
+                <button class="secondary-button" type="button" data-command="devtools">Open DevTools</button>
+                <button class="secondary-button" type="button" data-command="view-source">Page source</button>
+              </div>
+            </section>
+
+            <section
+              class="settings-panel"
+              data-settings-panel="library"
+              data-settings-search="library bookmarks saved pages clear open"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">Library</span>
+                <h3>Bookmarks</h3>
+              </div>
+
+              <div class="setting-row static-row" data-settings-search="bookmarks count saved pages">
+                <span>
+                  <strong>Saved pages</strong>
+                  <small id="settingsBookmarkDetail">0 bookmarks saved locally.</small>
+                </span>
+              </div>
+
+              <div class="quick-actions" data-settings-search="open bookmarks clear bookmarks delete saved">
+                <button class="secondary-button" id="settingsOpenBookmarksButton" type="button">Open bookmarks</button>
+                <button class="secondary-button danger-button" id="settingsClearBookmarksButton" type="button">
+                  Clear bookmarks
+                </button>
+              </div>
+
+              <div class="setting-row static-row" data-settings-search="import chrome safari bookmarks history passwords csv">
+                <span>
+                  <strong>Import browser data</strong>
+                  <small id="settingsImportStatus">Import bookmarks and history from Chrome/Safari, or passwords from CSV export.</small>
+                </span>
+              </div>
+
+              <div class="quick-actions" data-settings-search="import chrome safari passwords csv">
+                <button class="secondary-button" id="settingsImportChromeButton" type="button">Import Chrome</button>
+                <button class="secondary-button" id="settingsImportSafariButton" type="button">Import Safari</button>
+                <button class="secondary-button" id="settingsImportPasswordsButton" type="button">Import password CSV</button>
+              </div>
+            </section>
+
+            <section
+              class="settings-panel"
+              data-settings-panel="about"
+              data-settings-search="about browser lumen version chromium electron node platform user data"
+            >
+              <div class="section-heading">
+                <span class="eyebrow">About</span>
+                <h3>Lumen Browser</h3>
+              </div>
+
+              <div class="setting-row static-row" data-settings-search="browser version app">
+                <span>
+                  <strong>Browser version</strong>
+                  <small id="settingsAppVersion">Lumen Browser</small>
+                </span>
+              </div>
+
+              <div class="setting-row static-row" data-settings-search="chromium electron engine version">
+                <span>
+                  <strong>Engine</strong>
+                  <small id="settingsEngineVersion">Chromium / Electron</small>
+                </span>
+              </div>
+
+              <div class="setting-row static-row" data-settings-search="platform os architecture node">
+                <span>
+                  <strong>System</strong>
+                  <small id="settingsPlatformInfo">Platform info</small>
+                </span>
+              </div>
+
+              <div class="setting-row static-row" data-settings-search="user data settings path profile storage">
+                <span>
+                  <strong>User data</strong>
+                  <small id="settingsUserDataPath">Local settings path</small>
+                </span>
+              </div>
+
+              <div class="setting-row static-row shortcuts-row" data-settings-search="commands shortcuts keyboard hotkeys">
+                <span>
+                  <strong data-shortcut-title>Keyboard shortcuts</strong>
+                  <small data-shortcut-help>Core browser commands available from the keyboard.</small>
+                </span>
+                <div class="shortcut-list" aria-label="Keyboard shortcuts">
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="newTab">New tab</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>T</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="newWindow">New window</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>N</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="privateWindow">Private window</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>Shift</kbd><kbd>N</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="closeTab">Close tab</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>W</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="restoreClosedTab">Restore closed tab</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>Shift</kbd><kbd>T</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="focusAddress">Focus address bar</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>L</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="back">Back</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>←</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="forward">Forward</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>→</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="reload">Reload</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>R</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="bookmarkPage">Bookmark page</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>D</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="bookmarks">Bookmarks</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>B</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="sidebar">Sidebar</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>Shift</kbd><kbd>S</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="settings">Settings</span>
+                    <span class="shortcut-keys"><kbd>⌘/Ctrl</kbd><kbd>,</kbd></span>
+                  </div>
+                  <div class="shortcut-row">
+                    <span data-shortcut-label="screenshot">Take screenshot</span>
+                    <span class="shortcut-keys"><kbd data-shortcut-key="contextMenu">Right click</kbd><span>→</span><kbd data-shortcut-key="takeScreenshot">Screenshot</kbd></span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <span class="settings-note">Changes apply immediately.</span>
+          <button class="primary-button" id="saveSettingsButton" type="submit">Done</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="bookmarks-dialog" id="bookmarksDialog">
+      <section class="bookmarks-card">
+        <div class="dialog-header">
+          <div>
+            <span class="eyebrow">Library</span>
+            <h2>Bookmarks</h2>
+          </div>
+          <button class="icon-button" id="closeBookmarksButton" type="button" aria-label="Close bookmarks">x</button>
+        </div>
+        <div class="bookmark-list" id="bookmarkList"></div>
+      </section>
+    </dialog>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>

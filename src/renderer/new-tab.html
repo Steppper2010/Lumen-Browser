@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New tab</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --newtab-bg: #000000;
+        --newtab-panel: rgba(8, 8, 8, 0.92);
+        --newtab-input: #000000;
+        --newtab-text: #f4f4f4;
+        --newtab-muted: #9a9a9a;
+        --newtab-primary: #ffffff;
+        --newtab-primary-text: #000000;
+        --newtab-line: rgba(255, 255, 255, 0.32);
+        --newtab-line-soft: rgba(255, 255, 255, 0.14);
+        font-family:
+          "SF Mono", "Roboto Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+        background: var(--newtab-bg);
+        color: var(--newtab-text);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        position: relative;
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: var(--newtab-bg);
+      }
+
+      .signal-field {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        width: min(720px, calc(100vw - 48px));
+      }
+
+      .clock-panel {
+        display: grid;
+        gap: 4px;
+        justify-items: center;
+        margin: 0 0 20px;
+        text-align: center;
+      }
+
+      .clock-panel strong {
+        font-size: clamp(42px, 8vw, 82px);
+        line-height: 0.95;
+        font-weight: 800;
+      }
+
+      .clock-panel span {
+        color: var(--newtab-muted);
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      form {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--newtab-line);
+        border-radius: 2px;
+        background: var(--newtab-panel);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.58);
+        backdrop-filter: blur(8px);
+      }
+
+      input,
+      button {
+        height: 48px;
+        border-radius: 2px;
+        font: inherit;
+      }
+
+      input {
+        flex: 1;
+        min-width: 0;
+        padding: 0 16px;
+        border: 1px solid var(--newtab-line-soft);
+        background: var(--newtab-input);
+        color: var(--newtab-text);
+        outline: none;
+      }
+
+      input::placeholder {
+        color: var(--newtab-muted);
+      }
+
+      button {
+        min-width: 104px;
+        padding: 0 18px;
+        border: 1px solid var(--newtab-primary);
+        background: var(--newtab-primary);
+        color: var(--newtab-primary-text);
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      @media (max-width: 640px) {
+        form {
+          flex-direction: column;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas class="signal-field" id="signalField" aria-hidden="true"></canvas>
+    <main>
+      <section class="clock-panel" aria-label="Clock">
+        <strong id="clockTime">--:--</strong>
+        <span id="clockDate">Local time</span>
+      </section>
+      <form id="searchForm">
+        <input id="query" type="text" autocomplete="off" autofocus placeholder="Search or enter address" />
+        <button type="submit">Open</button>
+      </form>
+    </main>
+
+    <script>
+      const canvas = document.querySelector('#signalField');
+      const ctx = canvas.getContext('2d');
+      const form = document.querySelector('#searchForm');
+      const input = document.querySelector('#query');
+      const clockTime = document.querySelector('#clockTime');
+      const clockDate = document.querySelector('#clockDate');
+      const params = new URLSearchParams(location.search);
+      const motionEnabled = params.get('motion') !== '0';
+      const language = params.get('lang') === 'en' ? 'en' : 'ru';
+      const theme = params.get('theme') || 'pure-black';
+      const backdrop = params.get('backdrop') || 'signal-grid';
+      const copy = {
+        en: {
+          title: 'New tab',
+          placeholder: 'Search or enter address',
+          open: 'Open',
+          locale: 'en-US'
+        },
+        ru: {
+          title: 'Новая вкладка',
+          placeholder: 'Поиск или адрес',
+          open: 'Открыть',
+          locale: 'ru-RU'
+        }
+      };
+      const themes = {
+        'pure-black': ['#000000', 'rgba(8,8,8,0.92)', '#000000', '#f4f4f4', '#9a9a9a', '#ffffff', '#000000'],
+        graphite: ['#070707', 'rgba(23,23,23,0.92)', '#101010', '#f1f1f1', '#a7a7a7', '#ffffff', '#070707'],
+        terminal: ['#000300', 'rgba(6,16,6,0.92)', '#020802', '#eaffee', '#7dba86', '#b8ffc3', '#000300'],
+        'paper-white': ['#f7f7f4', 'rgba(255,255,255,0.92)', '#ffffff', '#101010', '#555555', '#000000', '#f7f7f4'],
+        midnight: ['#03060d', 'rgba(10,16,32,0.92)', '#060b16', '#eef4ff', '#9aaeca', '#dbe8ff', '#03060d'],
+        'cyber-matrix': ['#020204', 'rgba(9,9,21,0.92)', '#05050b', '#effffb', '#77cfc0', '#9effef', '#020204'],
+        frost: ['#edf4f7', 'rgba(249,253,255,0.92)', '#f9fdff', '#081016', '#4b606b', '#111820', '#edf4f7'],
+        solar: ['#fbf5e3', 'rgba(255,249,232,0.92)', '#fff9e8', '#201708', '#6f5c35', '#221702', '#fbf5e3'],
+        'violet-noir': ['#050408', 'rgba(18,11,28,0.92)', '#0b0710', '#fbf5ff', '#b8a0cb', '#efd9ff', '#050408'],
+        ember: ['#070303', 'rgba(22,11,8,0.92)', '#0d0605', '#fff6ef', '#c79b7f', '#ffd2b7', '#070303']
+      };
+      const searchEngines = {
+        duckduckgo: 'https://duckduckgo.com/?q=',
+        google: 'https://www.google.com/search?q=',
+        bing: 'https://www.bing.com/search?q=',
+        brave: 'https://search.brave.com/search?q=',
+        yandex: 'https://yandex.com/search/?text='
+      };
+      const pointer = {
+        x: window.innerWidth * 0.5,
+        y: window.innerHeight * 0.5,
+        targetX: window.innerWidth * 0.5,
+        targetY: window.innerHeight * 0.5,
+        active: false,
+        lastPulseAt: 0,
+        lastPulseX: window.innerWidth * 0.5,
+        lastPulseY: window.innerHeight * 0.5
+      };
+      const pulses = [];
+      let nodes = [];
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      let themeInk = '#ffffff';
+
+      document.documentElement.lang = language;
+      document.title = copy[language].title;
+      input.placeholder = copy[language].placeholder;
+      form.querySelector('button').textContent = copy[language].open;
+      applyTheme(theme);
+      resizeCanvas();
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      if (motionEnabled) {
+        requestAnimationFrame(animateSignalField);
+      } else {
+        drawStaticSignalField();
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('pointermove', (event) => {
+        if (!motionEnabled) return;
+
+        pointer.targetX = event.clientX;
+        pointer.targetY = event.clientY;
+        pointer.active = true;
+
+        const now = performance.now();
+        const moved = Math.hypot(pointer.targetX - pointer.lastPulseX, pointer.targetY - pointer.lastPulseY);
+
+        if (moved > 44 && now - pointer.lastPulseAt > 120) {
+          pulses.push({
+            x: pointer.targetX,
+            y: pointer.targetY,
+            startedAt: now
+          });
+          pointer.lastPulseAt = now;
+          pointer.lastPulseX = pointer.targetX;
+          pointer.lastPulseY = pointer.targetY;
+        }
+      });
+
+      window.addEventListener('pointerleave', () => {
+        if (!motionEnabled) return;
+        pointer.active = false;
+      });
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const value = input.value.trim();
+        if (!value) return;
+
+        if (/^https?:\/\//i.test(value)) {
+          location.href = value;
+          return;
+        }
+
+        if (/^[\w.-]+\.[a-z]{2,}(\/.*)?$/i.test(value)) {
+          location.href = `https://${value}`;
+          return;
+        }
+
+        location.href = `${getSearchEngineUrl()}${encodeURIComponent(value)}`;
+      });
+
+      function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        buildNodes();
+
+        if (!motionEnabled) {
+          drawStaticSignalField();
+        }
+      }
+
+      function applyTheme(themeName) {
+        const palette = themes[themeName] || themes['pure-black'];
+        const [bg, panel, inputBg, text, muted, primary, primaryText] = palette;
+        const root = document.documentElement.style;
+        root.setProperty('--newtab-bg', bg);
+        root.setProperty('--newtab-panel', panel);
+        root.setProperty('--newtab-input', inputBg);
+        root.setProperty('--newtab-text', text);
+        root.setProperty('--newtab-muted', muted);
+        root.setProperty('--newtab-primary', primary);
+        root.setProperty('--newtab-primary-text', primaryText);
+        root.setProperty('--newtab-line', colorMix(primary, 0.32));
+        root.setProperty('--newtab-line-soft', colorMix(primary, 0.14));
+        document.documentElement.style.colorScheme = ['paper-white', 'frost', 'solar'].includes(themeName) ? 'light' : 'dark';
+        themeInk = primary;
+      }
+
+      function colorMix(hex, alpha) {
+        const normalized = hex.replace('#', '');
+        const value = Number.parseInt(normalized.length === 3 ? normalized.replace(/(.)/g, '$1$1') : normalized, 16);
+        const r = (value >> 16) & 255;
+        const g = (value >> 8) & 255;
+        const b = value & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      function buildNodes() {
+        const spacing = Math.max(34, Math.min(56, width / 25));
+        const columns = Math.ceil(width / spacing) + 4;
+        const rows = Math.ceil(height / spacing) + 4;
+        nodes = [];
+
+        for (let row = -2; row < rows; row += 1) {
+          for (let column = -2; column < columns; column += 1) {
+            nodes.push({
+              column,
+              row,
+              x: column * spacing,
+              y: row * spacing,
+              seed: Math.sin(column * 18.42 + row * 31.17) * 1000
+            });
+          }
+        }
+      }
+
+      function animateSignalField(time = 0) {
+        pointer.x += (pointer.targetX - pointer.x) * 0.11;
+        pointer.y += (pointer.targetY - pointer.y) * 0.11;
+
+        ctx.clearRect(0, 0, width, height);
+        drawBackdrop(time);
+
+        requestAnimationFrame(animateSignalField);
+      }
+
+      function drawStaticSignalField() {
+        ctx.clearRect(0, 0, width, height);
+        pointer.x = width * 0.58;
+        pointer.y = height * 0.46;
+        drawBackdrop(1200);
+      }
+
+      function drawBackdrop(time) {
+        switch (backdrop) {
+          case 'orbital':
+            drawOrbitalBackdrop(time);
+            break;
+          case 'digital-rain':
+            drawDigitalRainBackdrop(time);
+            break;
+          case 'waveform':
+            drawWaveformBackdrop(time);
+            break;
+          case 'starfield':
+            drawStarfieldBackdrop(time);
+            break;
+          case 'radar':
+            drawRadarBackdrop(time);
+            break;
+          case 'quiet':
+            drawQuietBackdrop(time);
+            break;
+          default:
+            drawSignalBackdrop(time);
+            break;
+        }
+      }
+
+      function drawSignalBackdrop(time) {
+        drawScanlines(time);
+        drawNodeField(time);
+        drawPulses(time);
+        drawCursorAperture(time);
+      }
+
+      function drawOrbitalBackdrop(time) {
+        const centerX = width * 0.5 + (pointer.x - width * 0.5) * 0.035;
+        const centerY = height * 0.5 + (pointer.y - height * 0.5) * 0.035;
+        const base = Math.min(width, height) * 0.18;
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.strokeStyle = themeInk;
+        ctx.lineWidth = 1;
+
+        for (let ring = 0; ring < 7; ring += 1) {
+          const radius = base + ring * 34;
+          ctx.globalAlpha = 0.08 + ring * 0.018;
+          ctx.beginPath();
+          ctx.ellipse(0, 0, radius * 1.85, radius * 0.64, time * 0.00018 + ring * 0.42, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        for (let dot = 0; dot < 22; dot += 1) {
+          const angle = time * 0.00035 + dot * 0.92;
+          const orbit = base + (dot % 6) * 37;
+          const x = Math.cos(angle) * orbit * 1.62;
+          const y = Math.sin(angle * 1.23) * orbit * 0.62;
+          ctx.globalAlpha = 0.16 + (dot % 4) * 0.05;
+          ctx.fillStyle = themeInk;
+          ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
+        }
+
+        ctx.restore();
+      }
+
+      function drawDigitalRainBackdrop(time) {
+        const columns = Math.ceil(width / 28);
+        ctx.save();
+        ctx.fillStyle = themeInk;
+        ctx.font = '12px "SF Mono", monospace';
+
+        for (let column = 0; column < columns; column += 1) {
+          const seed = Math.sin(column * 18.17) * 10000;
+          const x = column * 28 + 8;
+          const offset = (time * (0.035 + (column % 5) * 0.008) + seed) % (height + 180);
+
+          for (let row = -5; row < 11; row += 1) {
+            const y = offset - row * 26;
+            if (y < -30 || y > height + 30) continue;
+            const value = Math.abs(Math.sin(seed + row * 3.7 + time * 0.002));
+            ctx.globalAlpha = Math.max(0, 0.28 - row * 0.022);
+            ctx.fillText(value > 0.5 ? '1' : '0', x, y);
+          }
+        }
+
+        ctx.restore();
+      }
+
+      function drawWaveformBackdrop(time) {
+        ctx.save();
+        ctx.strokeStyle = themeInk;
+        ctx.lineWidth = 1;
+
+        for (let band = 0; band < 9; band += 1) {
+          const baseY = height * (0.2 + band * 0.075);
+          ctx.globalAlpha = 0.045 + band * 0.012;
+          ctx.beginPath();
+
+          for (let x = -20; x <= width + 20; x += 16) {
+            const pull = Math.exp(-Math.hypot(pointer.x - x, pointer.y - baseY) / 360);
+            const y =
+              baseY +
+              Math.sin(x * 0.012 + time * 0.0012 + band) * (12 + band * 1.5) +
+              Math.cos(x * 0.004 + time * 0.0007) * 18 * pull;
+
+            if (x === -20) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      function drawStarfieldBackdrop(time) {
+        ctx.save();
+        ctx.fillStyle = themeInk;
+
+        for (let index = 0; index < 180; index += 1) {
+          const seed = Math.sin(index * 79.91) * 10000;
+          const speed = 0.00004 + (index % 7) * 0.000015;
+          const depth = ((time * speed + seed) % 1 + 1) % 1;
+          const angle = index * 2.399;
+          const radius = depth * Math.max(width, height) * 0.72;
+          const driftX = (pointer.x - width * 0.5) * depth * 0.045;
+          const driftY = (pointer.y - height * 0.5) * depth * 0.045;
+          const x = width * 0.5 + Math.cos(angle) * radius + driftX;
+          const y = height * 0.5 + Math.sin(angle) * radius + driftY;
+
+          if (x < 0 || y < 0 || x > width || y > height) continue;
+          ctx.globalAlpha = 0.05 + depth * 0.28;
+          const size = 1 + depth * 2.5;
+          ctx.fillRect(x, y, size, size);
+        }
+
+        ctx.restore();
+      }
+
+      function drawRadarBackdrop(time) {
+        const x = width * 0.5 + (pointer.x - width * 0.5) * 0.08;
+        const y = height * 0.5 + (pointer.y - height * 0.5) * 0.08;
+        const radius = Math.min(width, height) * 0.42;
+        const sweep = time * 0.0011;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.strokeStyle = themeInk;
+        ctx.lineWidth = 1;
+
+        for (let ring = 1; ring <= 5; ring += 1) {
+          ctx.globalAlpha = 0.07 + ring * 0.015;
+          ctx.beginPath();
+          ctx.arc(0, 0, (radius / 5) * ring, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        for (let spoke = 0; spoke < 8; spoke += 1) {
+          const angle = (Math.PI * 2 * spoke) / 8;
+          ctx.globalAlpha = 0.06;
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+          ctx.stroke();
+        }
+
+        ctx.rotate(sweep);
+        ctx.globalAlpha = 0.34;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(radius, 0);
+        ctx.stroke();
+
+        for (let marker = 0; marker < 18; marker += 1) {
+          const angle = marker * 1.71 + Math.sin(marker) * 0.3;
+          const distance = radius * (0.18 + ((marker * 37) % 100) / 125);
+          ctx.globalAlpha = 0.08 + (marker % 5) * 0.04;
+          ctx.fillStyle = themeInk;
+          ctx.fillRect(Math.cos(angle) * distance - 2, Math.sin(angle) * distance - 2, 4, 4);
+        }
+
+        ctx.restore();
+      }
+
+      function drawQuietBackdrop(time) {
+        ctx.save();
+        ctx.strokeStyle = themeInk;
+        ctx.lineWidth = 1;
+
+        for (let line = 0; line < 12; line += 1) {
+          const y = height * 0.18 + line * height * 0.062 + Math.sin(time * 0.0004 + line) * 8;
+          ctx.globalAlpha = 0.035 + (line % 3) * 0.012;
+          ctx.beginPath();
+          ctx.moveTo(width * 0.12, y);
+          ctx.lineTo(width * 0.88, y + Math.sin(line + time * 0.00025) * 20);
+          ctx.stroke();
+        }
+
+        ctx.globalAlpha = 0.08;
+        ctx.strokeRect(width * 0.18, height * 0.22, width * 0.64, height * 0.56);
+        ctx.restore();
+      }
+
+      function drawScanlines(time) {
+        const drift = (time * 0.025) % 18;
+
+        ctx.save();
+        ctx.globalAlpha = 0.09;
+        ctx.strokeStyle = themeInk;
+        ctx.lineWidth = 1;
+
+        for (let y = -18 + drift; y < height + 18; y += 18) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+
+        ctx.globalAlpha = 0.045;
+
+        for (let x = 0; x < width; x += 96) {
+          ctx.beginPath();
+          ctx.moveTo(x + Math.sin(time * 0.0007 + x) * 8, 0);
+          ctx.lineTo(x - Math.sin(time * 0.0007 + x) * 8, height);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      }
+
+      function drawNodeField(time) {
+        const projected = nodes.map((node) => projectNode(node, time));
+        const byKey = new Map(projected.map((node) => [`${node.column}:${node.row}`, node]));
+
+        ctx.save();
+        ctx.lineWidth = 1;
+
+        for (const node of projected) {
+          const right = byKey.get(`${node.column + 1}:${node.row}`);
+          const down = byKey.get(`${node.column}:${node.row + 1}`);
+
+          if (right) drawSignalLine(node, right);
+          if (down) drawSignalLine(node, down);
+        }
+
+        for (const node of projected) {
+          ctx.globalAlpha = 0.11 + node.lens * 0.42;
+          ctx.fillStyle = themeInk;
+          ctx.fillRect(node.x - 1, node.y - 1, 2, 2);
+        }
+
+        ctx.restore();
+      }
+
+      function projectNode(node, time) {
+        const t = time * 0.001;
+        const dx = pointer.x - node.x;
+        const dy = pointer.y - node.y;
+        const distance = Math.max(1, Math.hypot(dx, dy));
+        const lens = pointer.active ? Math.exp(-(distance * distance) / 72000) : 0;
+        const tangentX = -dy / distance;
+        const tangentY = dx / distance;
+        const wave =
+          Math.sin(t * 1.7 + node.seed + node.x * 0.012) * 5 +
+          Math.cos(t * 1.2 + node.seed * 0.7 + node.y * 0.01) * 4;
+        const fold = Math.sin(t * 2.2 + distance * 0.018) * lens * 26;
+
+        return {
+          column: node.column,
+          row: node.row,
+          x: node.x + Math.cos(node.seed + t) * wave + tangentX * lens * 54 + (dx / distance) * fold,
+          y: node.y + Math.sin(node.seed - t) * wave + tangentY * lens * 54 + (dy / distance) * fold,
+          lens
+        };
+      }
+
+      function drawSignalLine(a, b) {
+        const lens = Math.max(a.lens, b.lens);
+        ctx.globalAlpha = 0.035 + lens * 0.2;
+        ctx.strokeStyle = themeInk;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+
+      function drawPulses(time) {
+        for (let index = pulses.length - 1; index >= 0; index -= 1) {
+          const pulse = pulses[index];
+          const age = time - pulse.startedAt;
+          const progress = age / 900;
+
+          if (progress >= 1) {
+            pulses.splice(index, 1);
+            continue;
+          }
+
+          const radius = 18 + progress * 220;
+          const alpha = (1 - progress) * 0.36;
+
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = themeInk;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(pulse.x, pulse.y, radius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.globalAlpha = alpha * 0.55;
+          ctx.beginPath();
+          ctx.arc(pulse.x, pulse.y, radius * 0.62, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      function drawCursorAperture(time) {
+        const idleX = width * 0.5 + Math.sin(time * 0.00045) * width * 0.08;
+        const idleY = height * 0.5 + Math.cos(time * 0.00038) * height * 0.08;
+        const x = pointer.active ? pointer.x : idleX;
+        const y = pointer.active ? pointer.y : idleY;
+        const size = pointer.active ? 92 : 116;
+        const rotation = time * 0.00045;
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.strokeStyle = themeInk;
+        ctx.lineWidth = 1;
+        ctx.globalAlpha = pointer.active ? 0.42 : 0.18;
+        drawBrokenSquare(size);
+
+        ctx.rotate(-rotation * 2.1);
+        ctx.globalAlpha = pointer.active ? 0.22 : 0.12;
+        drawBrokenSquare(size * 1.42);
+
+        ctx.globalAlpha = pointer.active ? 0.26 : 0.14;
+        ctx.beginPath();
+        ctx.moveTo(-size * 0.82, 0);
+        ctx.lineTo(-size * 0.28, 0);
+        ctx.moveTo(size * 0.28, 0);
+        ctx.lineTo(size * 0.82, 0);
+        ctx.moveTo(0, -size * 0.82);
+        ctx.lineTo(0, -size * 0.28);
+        ctx.moveTo(0, size * 0.28);
+        ctx.lineTo(0, size * 0.82);
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      function drawBrokenSquare(size) {
+        const half = size / 2;
+        const gap = size * 0.25;
+
+        ctx.beginPath();
+        ctx.moveTo(-half, -half + gap);
+        ctx.lineTo(-half, -half);
+        ctx.lineTo(-half + gap, -half);
+        ctx.moveTo(half - gap, -half);
+        ctx.lineTo(half, -half);
+        ctx.lineTo(half, -half + gap);
+        ctx.moveTo(half, half - gap);
+        ctx.lineTo(half, half);
+        ctx.lineTo(half - gap, half);
+        ctx.moveTo(-half + gap, half);
+        ctx.lineTo(-half, half);
+        ctx.lineTo(-half, half - gap);
+        ctx.stroke();
+      }
+
+      function getSearchEngineUrl() {
+        return searchEngines[params.get('search')] || searchEngines.duckduckgo;
+      }
+
+      function updateClock() {
+        const now = new Date();
+        clockTime.textContent = now.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        clockDate.textContent = now.toLocaleDateString(copy[language].locale, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+    </script>
+  </body>
+</html>

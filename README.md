@@ -1,117 +1,84 @@
-# 🌑 Lumen Browser
+<div align="center">
+  <img src="build/icon.png" width="120" alt="Lumen Browser logo" />
+  <h1>Lumen Browser</h1>
+  <p><strong>A focused Chromium browser with a clean monochrome interface.</strong></p>
 
-> A modern Chromium-powered browser built with Electron.
+  [![CI](https://github.com/Steppper2010/Lumen-Browser/actions/workflows/ci.yml/badge.svg)](https://github.com/Steppper2010/Lumen-Browser/actions/workflows/ci.yml)
+  [![Latest release](https://img.shields.io/github/v/release/Steppper2010/Lumen-Browser?display_name=tag)](https://github.com/Steppper2010/Lumen-Browser/releases/latest)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-111111.svg)](LICENSE)
+  [![Electron](https://img.shields.io/badge/Electron-37-47848F?logo=electron)](https://www.electronjs.org/)
 
-Lumen is a lightweight desktop web browser focused on simplicity, speed, and a clean monochrome design. It combines Chromium's rendering engine with a custom-built interface while providing modern browsing features such as bookmarks, ad blocking, multiple windows, and draggable tabs.
-
----
-
-## ✨ Features
-
-* 🌐 Chromium rendering engine
-* 🚫 Built-in Ad Blocker
-* 📑 Multi-tab browsing
-* 🖱️ Draggable tabs
-* 🪟 Multi-window support
-* ⭐ Bookmark manager
-* 📥 Download manager
-* 📜 Browsing history
-* 🔐 Password storage
-* ⚙️ Configurable settings
-* 🌍 Proxy support
-* 🎨 Minimal black & white interface
+  [Website](https://steppper2010.github.io/Lumen-Browser/) · [Download](https://github.com/Steppper2010/Lumen-Browser/releases/latest) · [Report a bug](https://github.com/Steppper2010/Lumen-Browser/issues/new?template=bug_report.yml)
+</div>
 
 ---
 
-## 📸 Screenshots
+Lumen is a lightweight desktop browser built with Electron and Chromium. It combines everyday browsing tools with a distinctive, distraction-free interface.
 
-> Screenshots coming soon.
+## Highlights
 
----
+- Chromium-powered browsing with multiple windows and draggable tabs
+- Built-in ad blocking, bookmarks, history and download management
+- Password storage protected by Electron `safeStorage`
+- Proxy configuration and customizable browser settings
+- Native Windows builds with a simple installation flow
 
-## 🚀 Installation
+## Install
 
-Download the latest release from the **Releases** section.
+Download the latest Windows package from [GitHub Releases](https://github.com/Steppper2010/Lumen-Browser/releases/latest), extract it, and launch `Lumen.exe`.
 
-Or clone the repository:
+> Lumen is currently an early-stage project. Review the release notes before upgrading and keep a backup of important browser data.
+
+## Run from source
+
+Requirements: [Node.js 22+](https://nodejs.org/) and [pnpm 10+](https://pnpm.io/).
 
 ```bash
-git clone https://github.com/Steppper2010/Lumen-Browser
-cd Lumen
+git clone https://github.com/Steppper2010/Lumen-Browser.git
+cd Lumen-Browser
+pnpm install --frozen-lockfile
+pnpm start
 ```
 
-Install dependencies:
+Useful commands:
 
 ```bash
-npm install
+pnpm check                 # syntax checks
+pnpm pack:win              # unpacked Windows build
+pnpm dist:win              # distributable Windows ZIP
+pnpm dist:win:installer    # NSIS installer
 ```
 
-Run the browser:
-
-```bash
-npm start
-```
-
----
-
-## 🛠 Built With
-
-* Electron
-* Chromium
-* JavaScript
-* HTML
-* CSS
-* Node.js
-
----
-
-## 📁 Project Structure
+## Project layout
 
 ```text
+build/                 Application icons
+scripts/               Validation and packaging helpers
 src/
- ├── renderer/
- ├── main.js
- ├── preload.js
- ├── adblocker.js
- ├── password-store.js
- └── settings.js
+├── main.js            Electron main process
+├── preload.js         Safe renderer bridge
+├── adblocker.js       Request filtering
+├── password-store.js  Encrypted credential storage
+├── settings.js        Persistent preferences
+└── renderer/          Browser interface
 ```
 
----
+## Roadmap
 
-## 🎯 Roadmap
+- Extension support
+- Themes and vertical tabs
+- Built-in translation
+- Optional synchronization
+- Performance and privacy improvements
 
-* [ ] Extensions support
-* [ ] Built-in translator
-* [ ] Cloud sync
-* [ ] Themes
-* [ ] Vertical tabs
-* [ ] Performance improvements
-* [ ] Privacy enhancements
+## Contributing
 
----
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing a change. For security reports, follow [SECURITY.md](SECURITY.md) instead of opening a public issue.
 
-## 🤝 Contributing
+## License
 
-Contributions, issues, and feature requests are welcome.
+Source code is available under the [MIT License](LICENSE). Electron and Chromium notices included in release packages remain subject to their respective licenses.
 
-Feel free to fork the project and submit a Pull Request.
-
----
----
-
-## 📬 Contact
-
-Have questions, suggestions, or found a bug? Feel free to reach out!
-
-* 💬 **Discord:** `Steppper_`
-* ✈️ **Telegram:** https://t.me/steppper
-* 🐛 **GitHub Issues:** Open an issue in this repository
-
-I'm always open to feedback, feature requests, and collaboration.
-
-
-
-## ⭐ Support
-
-If you like Lumen, consider giving the repository a star on GitHub.
+<div align="center">
+  <sub>Built by <a href="https://github.com/Steppper2010">Steppper2010</a>.</sub>
+</div>

@@ -1,0 +1,69 @@
+{
+  "name": "lumen-browser",
+  "version": "0.1.0",
+  "description": "A black-and-white digital Chromium-based browser shell with ad blocking, bookmarks, draggable tabs, and multi-window support.",
+  "main": "src/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "check": "node scripts/check-syntax.js",
+    "pack:win": "electron-builder --win dir --x64",
+    "dist:win:zip": "electron-builder --win zip --x64",
+    "dist:win": "electron-builder --win zip --x64",
+    "dist:win:installer": "electron-builder --win nsis --x64"
+  },
+  "keywords": [
+    "browser",
+    "chromium",
+    "electron",
+    "adblock",
+    "bookmarks"
+  ],
+  "author": "Lumen",
+  "license": "MIT",
+  "build": {
+    "appId": "com.lumen.browser",
+    "productName": "Lumen",
+    "directories": {
+      "output": "outputs/dist"
+    },
+    "files": [
+      "src/**/*",
+      "build/icon.*",
+      "package.json"
+    ],
+    "icon": "build/icon",
+    "asar": true,
+    "npmRebuild": false,
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-${version}-Windows-${arch}.${ext}"
+    },
+    "mac": {
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.15.3",
+    "png-to-ico": "^3.0.1"
+  }
+}

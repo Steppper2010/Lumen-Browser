@@ -1,0 +1,30 @@
+name: Bug report
+description: Report a reproducible problem in Lumen Browser
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open…\n2. Click…\n3. See…"
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Lumen version
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Windows version
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context

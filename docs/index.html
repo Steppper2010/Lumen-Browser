@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Lumen Browser — a focused Chromium browser with a clean monochrome interface.">
+  <title>Lumen Browser — Browse in focus</title>
+  <style>
+    :root{color-scheme:dark;--ink:#f5f5f3;--muted:#9d9d98;--line:#292926;--glow:#b9d9ff}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#090909;color:var(--ink);font:16px/1.6 Inter,ui-sans-serif,system-ui,sans-serif;overflow-x:hidden}body:before{content:"";position:fixed;inset:-20%;background:radial-gradient(circle at 68% 18%,#19314a88,transparent 27%),radial-gradient(circle at 18% 75%,#252525,transparent 25%);z-index:-1}.wrap{width:min(1120px,calc(100% - 40px));margin:auto}nav{height:80px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;gap:12px;align-items:center;font-weight:700;letter-spacing:.02em}.mark{width:34px;height:34px;border:1px solid #555;border-radius:50%;box-shadow:inset -8px -5px 0 #d9eaff,0 0 30px #75baff55}.navlinks{display:flex;gap:24px;align-items:center}a{color:inherit;text-decoration:none}.button{display:inline-flex;padding:12px 20px;border:1px solid #555;border-radius:999px;background:#f5f5f3;color:#090909;font-weight:700;transition:.2s}.button:hover{transform:translateY(-2px);box-shadow:0 8px 35px #9dccff33}.ghost{background:transparent;color:var(--ink)}.hero{min-height:690px;display:grid;place-items:center;text-align:center;padding:80px 0}.eyebrow{text-transform:uppercase;letter-spacing:.22em;color:var(--glow);font-size:12px}.hero h1{font-size:clamp(56px,11vw,132px);line-height:.85;letter-spacing:-.07em;margin:30px 0;background:linear-gradient(180deg,#fff 20%,#777);color:transparent;background-clip:text}.lead{max-width:680px;margin:0 auto 36px;color:var(--muted);font-size:clamp(18px,2.2vw,24px)}.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:40px 0 120px}.card{min-height:240px;padding:30px;border:1px solid var(--line);border-radius:24px;background:#111111bb;backdrop-filter:blur(20px)}.card span{font-size:30px}.card h2{margin:40px 0 8px;font-size:20px}.card p{margin:0;color:var(--muted)}.statement{padding:120px 0;border-top:1px solid var(--line)}.statement h2{font-size:clamp(40px,7vw,80px);line-height:1;letter-spacing:-.05em;max-width:900px;margin:0}.statement em{color:var(--glow);font-style:normal}footer{padding:40px 0 70px;border-top:1px solid var(--line);color:var(--muted);display:flex;justify-content:space-between}@media(max-width:760px){.navlinks a:not(.button){display:none}.features{grid-template-columns:1fr}.hero{min-height:580px}.statement{padding:80px 0}footer{display:block}.hero h1{letter-spacing:-.05em}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav><a class="brand" href="#"><span class="mark"></span>LUMEN</a><div class="navlinks"><a href="#features">Features</a><a href="https://github.com/Steppper2010/Lumen-Browser">Source</a><a class="button" href="https://github.com/Steppper2010/Lumen-Browser/releases/latest">Download</a></div></nav>
+    <main>
+      <section class="hero"><div><div class="eyebrow">Chromium power · Lumen focus</div><h1>Browse<br>in focus.</h1><p class="lead">A lightweight desktop browser shaped around clarity, speed, and a striking monochrome interface.</p><div class="actions"><a class="button" href="https://github.com/Steppper2010/Lumen-Browser/releases/latest">Download for Windows</a><a class="button ghost" href="https://github.com/Steppper2010/Lumen-Browser">View on GitHub</a></div></div></section>
+      <section class="features" id="features"><article class="card"><span>◫</span><h2>Made for the everyday</h2><p>Tabs, bookmarks, downloads, history and multiple windows—everything close at hand.</p></article><article class="card"><span>◉</span><h2>Calm by design</h2><p>A focused interface that gets out of the way and keeps the web at the center.</p></article><article class="card"><span>◇</span><h2>Your browser, your rules</h2><p>Built-in blocking, protected password storage, proxy controls and flexible settings.</p></article></section>
+      <section class="statement"><div class="eyebrow">Open development</div><h2>Built in the open.<br><em>Designed to evolve.</em></h2></section>
+    </main>
+    <footer><span>© 2026 Lumen Browser</span><span>Electron · Chromium · MIT</span></footer>
+  </div>
+</body>
+</html>
